@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import * as ABI from './abis/erc-20.abi.json';
+import ABI from './abis/erc-20.abi.json';
 
 const TOKEN_ADDRESS: string = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
 const RPC_URL: string = 'https://eth.llamarpc.com';
