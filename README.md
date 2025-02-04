@@ -10,19 +10,11 @@ Realisation on TypeScript
 
 ## Expected output:  
 ```
-[
-        {
-                "id": 1,
-                "firstName": "Vitalii",
-                "lastName": "LVitalii",
-                "email": "vitalii@vit.alii"
-        },
-        {
-                "id": 2,
-                "firstName": "Gregory",
-                "lastName": "LGregory",
-                "email": "greg@or.y"
-        }
-]
+
+
+                Token address: 0xdAC17F958D2ee523a2206206994597C13D831ec7
+                Symbol: USDT
+                Decimals: 6
+
 
 ```
