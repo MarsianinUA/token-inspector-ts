@@ -15,7 +15,7 @@ if(!TOKEN_ADDRESS || !RPC_URL){
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     const contract = new ethers.Contract(TOKEN_ADDRESS, ABI, provider);
     const symbol: string = await contract.symbol();
-    const decimals:string = await contract.decimals();
+    const decimals: string = await contract.decimals();
 
     console.log(`Token address ${TOKEN_ADDRESS}`);    
     console.log(`Symbol: ${symbol}`);
