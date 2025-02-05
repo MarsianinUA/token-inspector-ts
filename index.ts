@@ -85,7 +85,7 @@ async function main() {
             ethereum: tokenData1,
             binance: tokenData2
         };
-
+        
         console.table(tokenData);
 
     } catch (error) {
