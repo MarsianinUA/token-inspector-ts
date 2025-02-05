@@ -80,13 +80,11 @@ async function main() {
             fetchTokenData(networks.ethereum),
             fetchTokenData(networks.binance)
         ]);
-
-        const tokenData = {
+        
+        console.table({
             ethereum: tokenData1,
             binance: tokenData2
-        };
-        
-        console.table(tokenData);
+        });
 
     } catch (error) {
         console.error('Error fetching token data:', error);
