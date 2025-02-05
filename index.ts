@@ -1,81 +1,93 @@
 import { ethers } from 'ethers';
 import * as dotenv from 'dotenv';
+import BigNumber from 'bignumber.js';
 import ABI from './abis/erc-20.abi.json';
 
 dotenv.config();
 
-interface NetworkConfig {
-    TOKEN_ADDRESS: string;
-    RPC_URL: string;
-    MULTICALL_ADDRESS: string;
-    provider ?: ethers.JsonRpcProvider;
+interface TokenData {
+    tokenAddress: string;
+    symbol: string;
+    decimals:number;
+    totalSupplyWei:BigInt;
+    totalSupplyTokens:number;
 }
 
-const networks: Record<string, NetworkConfig> = {
-    network1: {
-        TOKEN_ADDRESS: process.env.TOKEN_ADDRESS_1 || '',
-        RPC_URL: process.env.RPC_URL_1 || '',
-        MULTICALL_ADDRESS: process.env.MULTICALL_ADDRESS_1 || '',
+interface NetworkConfig {
+    tokenAddress: string;
+    rpcUrl: string;
+    multicallAddress: string;
+    provider?: ethers.JsonRpcProvider;
+}
+
+enum ChainName {
+    Ethereum = "ethereum",
+    Binance = "binance",
+}
+
+const networks: Record<ChainName, NetworkConfig> = {
+    [ChainName.Ethereum]: {
+        tokenAddress: process.env.TOKEN_ADDRESS_ETHEREUM || "",
+        rpcUrl: process.env.RPC_URL_ETHEREUM || "",
+        multicallAddress: process.env.MULTICALL_ADDRESS || "",
     },
-    network2: {
-        TOKEN_ADDRESS: process.env.TOKEN_ADDRESS_2 || '',
-        RPC_URL: process.env.RPC_URL_2 || '',
-        MULTICALL_ADDRESS: process.env.MULTICALL_ADDRESS_2 || '',
-    }
+    [ChainName.Binance]: {
+        tokenAddress: process.env.TOKEN_ADDRESS_BINANCE || "",
+        rpcUrl: process.env.RPC_URL_BINANCE || "",
+        multicallAddress: process.env.MULTICALL_ADDRESS || "",
+    },
 };
 
 const contractInterface = new ethers.Interface(ABI);
 
-async function fetchTokenData(network: NetworkConfig) {
-    if (!network.TOKEN_ADDRESS || !network.RPC_URL || !network.MULTICALL_ADDRESS) {
-        throw new Error(`Missing configuration for network: ${network.RPC_URL}`);
+async function fetchTokenData(network: NetworkConfig):Promise<TokenData> {
+    if (!network.tokenAddress || !network.rpcUrl || !network.multicallAddress) {
+        throw new Error(`Missing configuration for network: ${network.rpcUrl}`);
     }
 
-    network.provider = new ethers.JsonRpcProvider(network.RPC_URL);
+    network.provider = new ethers.JsonRpcProvider(network.rpcUrl);
     
     const multicall = new ethers.Contract(
-        network.MULTICALL_ADDRESS,
+        network.multicallAddress,
         ["function aggregate(tuple(address target, bytes callData)[] calls) view returns (uint256 blockNumber, bytes[] returnData)"],
         network.provider
     );
 
     const calls = [
-        { target: network.TOKEN_ADDRESS, callData: contractInterface.encodeFunctionData('symbol') },
-        { target: network.TOKEN_ADDRESS, callData: contractInterface.encodeFunctionData('decimals')},
-        { target: network.TOKEN_ADDRESS, callData: contractInterface.encodeFunctionData('totalSupply')}
+        { target: network.tokenAddress, callData: contractInterface.encodeFunctionData('symbol') },
+        { target: network.tokenAddress, callData: contractInterface.encodeFunctionData('decimals')},
+        { target: network.tokenAddress, callData: contractInterface.encodeFunctionData('totalSupply')}
     ];
 
     const [, returnData] = await multicall.aggregate(calls);
 
+    const decimals = Number(contractInterface.decodeFunctionResult('decimals', returnData[1])[0]);
+    const totalSupplyWei = contractInterface.decodeFunctionResult('totalSupply', returnData[2])[0]
+    const totalSupplyWeiBigN = new BigNumber((totalSupplyWei).toString());
+
     return {
+        tokenAddress: network.rpcUrl,
         symbol: contractInterface.decodeFunctionResult('symbol', returnData[0])[0],
-        decimals: contractInterface.decodeFunctionResult('decimals', returnData[1])[0],
-        totalSupply: contractInterface.decodeFunctionResult('totalSupply', returnData[2])[0],
-        totalSupplyWei: contractInterface.decodeFunctionResult('totalSupply', returnData[2])[0] / 
-        (10n ^ contractInterface.decodeFunctionResult('decimals', returnData[1])[0])
-    };
+        decimals:decimals,
+        totalSupplyWei:totalSupplyWei,
+        totalSupplyTokens: (totalSupplyWeiBigN.div(10 ** decimals)).toNumber()
+    }
 }
 
 async function main() {
     try {
         const [tokenData1, tokenData2] = await Promise.all([
-            fetchTokenData(networks.network1),
-            fetchTokenData(networks.network2)
+            fetchTokenData(networks.ethereum),
+            fetchTokenData(networks.binance)
         ]);
 
-        console.log(`--- Network 1 ---`);
-        console.log(`Token address: ${networks.network1.TOKEN_ADDRESS}`);
-        console.log(`Symbol: ${tokenData1.symbol}`);
-        console.log(`Decimals: ${tokenData1.decimals}`);
-        console.log(`totalSupply: ${tokenData1.totalSupply}`);
-        console.log(`totalSupplyWei: ${tokenData1.totalSupplyWei}`);
+        const tokenData = {
+            ethereum: tokenData1,
+            binance: tokenData2
+        };
 
-        console.log(`\n--- Network 2 ---`);
-        console.log(`Token address: ${networks.network2.TOKEN_ADDRESS}`);
-        console.log(`Symbol: ${tokenData2.symbol}`);
-        console.log(`Decimals: ${tokenData2.decimals}`);
-        console.log(`totalSupply: ${tokenData2.totalSupply}`);
-        console.log(`totalSupplyWei: ${tokenData2.totalSupplyWei}`);
+        console.table(tokenData);
+
     } catch (error) {
         console.error('Error fetching token data:', error);
     }
