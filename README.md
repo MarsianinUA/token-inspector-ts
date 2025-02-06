@@ -1,7 +1,10 @@
 # token-inspector-ts
 
-Addresses the provider to obtain a ERC20 **symbol**, **decimals**  
+Addresses the provider to obtain a ERC20 **symbol**, **decimals**, **totalSupply**, **totalSupplyWei**  
+All methods are executed through Multicall  
+Processes networks asynchronously  
 Realisation on TypeScript
+
 # Layer Supertype
 
 ## Quick Start
@@ -11,8 +14,11 @@ Realisation on TypeScript
 ## Expected output:  
 ```
 
-      Token address: 0xdAC17F958D2ee523a2206206994597C13D831ec7
-      Symbol: USDT
-      Decimals: 6
+  ┌─────────┬──────────────────────────────────────────┬────────┬──────────┬─────────────────────────────┬───────────────────┐
+  │ (index) │ tokenAddress                             │ symbol │ decimals │ totalSupplyWei              │ totalSupplyTokens │
+  ├─────────┼──────────────────────────────────────────┼────────┼──────────┼─────────────────────────────┼───────────────────┤
+  │ 0       │ 'https://bsc-testnet-rpc.publicnode.com' │ 'SAT'  │ 18       │ '1000000000000000000000000' │ '1000000'         │
+  │ 1       │ 'https://bsc-testnet.public.blastapi.io' │ 'SAT'  │ 18       │ '1000000000000000000000000' │ '1000000'         │
+  └─────────┴──────────────────────────────────────────┴────────┴──────────┴─────────────────────────────┴───────────────────┘
 
 ```
