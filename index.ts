@@ -9,8 +9,8 @@ interface TokenData {
     tokenAddress: string;
     symbol: string;
     decimals:number;
-    totalSupplyWei:BigInt;
-    totalSupplyTokens:BigNumber;
+    totalSupplyWei:string;
+    totalSupplyTokens:string;
 }
 
 interface NetworkConfig {
@@ -63,14 +63,14 @@ async function fetchTokenData(network: NetworkConfig): Promise<TokenData> {
 
     const decimals: number = Number(contractInterface.decodeFunctionResult('decimals', returnData[1])[0]);
     const totalSupplyWei: BigInt = contractInterface.decodeFunctionResult('totalSupply', returnData[2])[0];
-    const totalSupplyWeiBigN: BigNumber = new BigNumber((totalSupplyWei).toString());
+    const totalSupplyWeiBigN: BigNumber = new BigNumber(totalSupplyWei.toString());
 
     return {
         tokenAddress: network.rpcUrl,
         symbol: contractInterface.decodeFunctionResult('symbol', returnData[0])[0],
         decimals: decimals,
-        totalSupplyWei: totalSupplyWei,
-        totalSupplyTokens: totalSupplyWeiBigN.dividedBy(new BigNumber(10).pow(decimals))
+        totalSupplyWei: totalSupplyWei.toString(),
+        totalSupplyTokens: totalSupplyWeiBigN.dividedBy(new BigNumber(10).pow(decimals)).toFixed(decimals)
     }
 }
 
@@ -81,13 +81,7 @@ async function fetchTokenData(network: NetworkConfig): Promise<TokenData> {
             fetchTokenData(networks.binance)
         ]);
 
-        const formattedTokensData = [tokenData1, tokenData2].map((token) => ({
-            ...token,
-            totalSupplyWei: token.totalSupplyWei.toString(),
-            totalSupplyTokens: token.totalSupplyTokens.toString(),
-        }))
-
-        console.table(formattedTokensData);
+        console.table([tokenData1, tokenData2])
         
     } catch (error) {
         console.error('Error fetching token data:', error);
