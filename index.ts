@@ -10,7 +10,7 @@ interface TokenData {
     symbol: string;
     decimals:number;
     totalSupplyWei:BigInt;
-    totalSupplyTokens:number;
+    totalSupplyTokens:BigNumber;
 }
 
 interface NetworkConfig {
@@ -62,33 +62,34 @@ async function fetchTokenData(network: NetworkConfig):Promise<TokenData> {
     const [, returnData] = await multicall.aggregate(calls);
 
     const decimals = Number(contractInterface.decodeFunctionResult('decimals', returnData[1])[0]);
-    const totalSupplyWei = contractInterface.decodeFunctionResult('totalSupply', returnData[2])[0]
+    const totalSupplyWei = contractInterface.decodeFunctionResult('totalSupply', returnData[2])[0];
     const totalSupplyWeiBigN = new BigNumber((totalSupplyWei).toString());
 
     return {
         tokenAddress: network.rpcUrl,
         symbol: contractInterface.decodeFunctionResult('symbol', returnData[0])[0],
-        decimals:decimals,
-        totalSupplyWei:totalSupplyWei,
-        totalSupplyTokens: (totalSupplyWeiBigN.div(10 ** decimals)).toNumber()
+        decimals: decimals,
+        totalSupplyWei: totalSupplyWei,
+        totalSupplyTokens: (totalSupplyWeiBigN).div(10 ** decimals)
     }
 }
 
-async function main() {
+(async () => {
     try {
         const [tokenData1, tokenData2] = await Promise.all([
             fetchTokenData(networks.ethereum),
             fetchTokenData(networks.binance)
         ]);
-        
-        console.table({
-            ethereum: tokenData1,
-            binance: tokenData2
-        });
 
+        const formattedTokensData = [tokenData1, tokenData2].map((token) => ({
+            ...token,
+            totalSupplyWei: token.totalSupplyWei.toString(),
+            totalSupplyTokens: token.totalSupplyTokens.toString(),
+        }))
+
+        console.table(formattedTokensData);
+        
     } catch (error) {
         console.error('Error fetching token data:', error);
     }
-}
-
-main();
+})()
