@@ -49,7 +49,7 @@ async function fetchTokenData(network: NetworkConfig): Promise<TokenData> {
     
     const multicall = new ethers.Contract(
         network.multicallAddress,
-        ["function aggregate(tuple(address target, bytes callData)[] calls) view returns (uint256 blockNumber, bytes[] returnData)"],
+        ['function aggregate(tuple(address target, bytes callData)[] calls) view returns (uint256 blockNumber, bytes[] returnData)'],
         network.provider
     );
 
