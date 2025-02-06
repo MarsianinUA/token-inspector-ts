@@ -27,12 +27,12 @@ enum ChainName {
 
 const networks: Record<ChainName, NetworkConfig> = {
     [ChainName.Ethereum]: {
-        tokenAddress: process.env.TOKEN_ADDRESS_ETHEREUM || "",
+        tokenAddress: process.env.TOKEN_ADDRESS || "",
         rpcUrl: process.env.RPC_URL_ETHEREUM || "",
         multicallAddress: process.env.MULTICALL_ADDRESS || "",
     },
     [ChainName.Binance]: {
-        tokenAddress: process.env.TOKEN_ADDRESS_BINANCE || "",
+        tokenAddress: process.env.TOKEN_ADDRESS || "",
         rpcUrl: process.env.RPC_URL_BINANCE || "",
         multicallAddress: process.env.MULTICALL_ADDRESS || "",
     },
@@ -40,7 +40,7 @@ const networks: Record<ChainName, NetworkConfig> = {
 
 const contractInterface = new ethers.Interface(ABI);
 
-async function fetchTokenData(network: NetworkConfig):Promise<TokenData> {
+async function fetchTokenData(network: NetworkConfig): Promise<TokenData> {
     if (!network.tokenAddress || !network.rpcUrl || !network.multicallAddress) {
         throw new Error(`Missing configuration for network: ${network.rpcUrl}`);
     }
@@ -70,7 +70,7 @@ async function fetchTokenData(network: NetworkConfig):Promise<TokenData> {
         symbol: contractInterface.decodeFunctionResult('symbol', returnData[0])[0],
         decimals: decimals,
         totalSupplyWei: totalSupplyWei,
-        totalSupplyTokens: (totalSupplyWeiBigN).div(10 ** decimals)
+        totalSupplyTokens: totalSupplyWeiBigN.dividedBy(new BigNumber(10).pow(decimals))
     }
 }
 
