@@ -61,9 +61,9 @@ async function fetchTokenData(network: NetworkConfig):Promise<TokenData> {
 
     const [, returnData] = await multicall.aggregate(calls);
 
-    const decimals = Number(contractInterface.decodeFunctionResult('decimals', returnData[1])[0]);
-    const totalSupplyWei = contractInterface.decodeFunctionResult('totalSupply', returnData[2])[0];
-    const totalSupplyWeiBigN = new BigNumber((totalSupplyWei).toString());
+    const decimals: number = Number(contractInterface.decodeFunctionResult('decimals', returnData[1])[0]);
+    const totalSupplyWei: BigInt = contractInterface.decodeFunctionResult('totalSupply', returnData[2])[0];
+    const totalSupplyWeiBigN: BigNumber = new BigNumber((totalSupplyWei).toString());
 
     return {
         tokenAddress: network.rpcUrl,
